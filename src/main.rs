@@ -1,10 +1,9 @@
 mod bi_gram;
 
 use rand::rngs::ThreadRng;
-use std::{
-    env,
-    io::{stdin, stdout, Write},
-};
+use std::env;
+use std::io::{stdin, stdout, Write};
+use std::time::Instant;
 
 use bi_gram::BiGramModel;
 
@@ -34,7 +33,11 @@ fn main() {
         println!("Expected file as argument");
         return;
     }
+
+    let start = Instant::now();
     let mut model = BiGramModel::new(&args[1..args.len()]);
+    let elapsed = start.elapsed();
+    println!("Creating model took {:?}", elapsed);
 
     let mut input = String::new();
     loop {
@@ -51,7 +54,10 @@ fn main() {
         }
 
         let mut rng = rand::thread_rng();
-        generate_n_words(&mut model, &mut rng, input.as_str(), 5);
+        let start = Instant::now();
+        generate_n_words(&mut model, &mut rng, input.as_str(), 8);
+        let elapsed = start.elapsed();
+        println!("Generating response took {:?}", elapsed);
         input.clear();
     }
 }

@@ -145,7 +145,7 @@ impl BiGramModel {
         return create_bi_gram(freqs_and_occurrences);
     }
 
-    pub fn get_next(&mut self, first: &str, rng: &mut ThreadRng) -> Option<&str> {
+    pub fn get_next(&self, first: &str, rng: &mut ThreadRng) -> Option<&str> {
         let val = self.data.get(first)?;
         let num: f64 = rng.gen_range(0.0..val.sum);
 

@@ -8,17 +8,17 @@ use std::{
 
 use bi_gram::BiGramModel;
 
-fn generate_n_words(model: &BiGramModel, mut rng: &mut ThreadRng, prompt: &str, n: u32) {
-    let mut curr = String::from(prompt);
+fn generate_n_words(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str, n: u32) {
+    let mut curr = prompt;
     for _ in 0..n {
         print!("{} ", curr);
-        curr = String::from(model.get_next(curr.as_str(), &mut rng).unwrap());
+        curr = model.get_next(curr, &mut *rng).unwrap();
     }
     println!("");
 }
 
-fn get_next(model: &BiGramModel, mut rng: &mut ThreadRng, prompt: &str) {
-    match model.get_next(prompt, &mut rng) {
+fn get_next(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str) {
+    match model.get_next(prompt, &mut *rng) {
         Some(next) => {
             println!("Next Word: {}", next);
         }

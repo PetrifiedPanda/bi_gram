@@ -1,5 +1,8 @@
 use rand::{rngs::ThreadRng, Rng};
-use std::{collections::HashMap, fs::File, hash::Hash, io::Read};
+use std::collections::HashMap;
+use std::fs::File;
+use std::hash::Hash;
+use std::io::{Error, Read};
 
 struct BiGram<'a> {
     first: &'a str,
@@ -39,11 +42,20 @@ struct FreqsAndOccurences<'a> {
     occurences: HashMap<&'a str, u32>,
 }
 
-fn get_bigrams_freqs(contents: &str) -> FreqsAndOccurences {
+fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
     let mut freqs = HashMap::<BiGram, u32>::new();
     let mut occurences = HashMap::<&str, u32>::new();
     let mut it = contents.split(" ");
-    let mut prev = it.next().unwrap();
+    let opt = it.next();
+    let mut prev;
+    match opt {
+        Some(val) => {
+            prev = val;
+        }
+        None => {
+            return FreqsAndOccurences { freqs, occurences };
+        }
+    }
     for item in it {
         let bigram = BiGram {
             first: prev,
@@ -65,13 +77,13 @@ fn get_bigrams_freqs(contents: &str) -> FreqsAndOccurences {
     return FreqsAndOccurences { freqs, occurences };
 }
 
-fn read_files_into_string(paths: &[String]) -> String {
+fn read_files_into_string(paths: &[String]) -> Result<String, Error> {
     let mut res = String::new();
     for path in paths {
-        let mut f = File::open(path).unwrap();
-        f.read_to_string(&mut res).unwrap();
+        let mut f = File::open(path)?;
+        f.read_to_string(&mut res)?;
     }
-    return res;
+    return Ok(res);
 }
 
 fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
@@ -80,6 +92,7 @@ fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
 
     let mut res_map = HashMap::<String, BiGramOptions>::new();
     for (key, value) in freqs {
+        // unwrap fine because everything in freqs has an occurrence count
         let occurence_count = occurences.get(key.first).unwrap();
         let probability = value as f64 / *occurence_count as f64;
 
@@ -108,10 +121,10 @@ fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
 }
 
 impl BiGramModel {
-    pub fn new(paths: &[String]) -> BiGramModel {
-        let contents = read_files_into_string(paths);
-        let freqs_and_occurrences = get_bigrams_freqs(contents.as_str());
-        return create_bi_gram(freqs_and_occurrences);
+    pub fn new(paths: &[String]) -> Result<BiGramModel, Error> {
+        let contents = read_files_into_string(paths)?;
+        let freqs_and_occurrences = get_bi_gram_freqs(contents.as_str());
+        return Ok(create_bi_gram(freqs_and_occurrences));
     }
 
     pub fn get_next(&self, first: &str, rng: &mut ThreadRng) -> Option<&str> {
@@ -119,6 +132,7 @@ impl BiGramModel {
         let num: f64 = rng.gen_range(0.0..val.sum);
 
         let mut it = val.opts.iter();
+        // on insertion at least one item has to have been inserted into val.opts
         let mut item = it.next().unwrap();
         let mut sum = val.sum - item.probability;
         while num < sum {

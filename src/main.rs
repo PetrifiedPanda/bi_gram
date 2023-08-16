@@ -35,7 +35,7 @@ fn main() {
     }
 
     let start = Instant::now();
-    let mut model = BiGramModel::new(&args[1..args.len()]);
+    let model = BiGramModel::new(&args[1..args.len()]).unwrap();
     let elapsed = start.elapsed();
     println!("Creating model took {:?}", elapsed);
 
@@ -55,7 +55,7 @@ fn main() {
 
         let mut rng = rand::thread_rng();
         let start = Instant::now();
-        generate_n_words(&mut model, &mut rng, input.as_str(), 8);
+        generate_n_words(&model, &mut rng, input.as_str(), 8);
         let elapsed = start.elapsed();
         println!("Generating response took {:?}", elapsed);
         input.clear();

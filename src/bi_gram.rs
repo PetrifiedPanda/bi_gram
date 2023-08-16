@@ -1,5 +1,5 @@
 use rand::{rngs::ThreadRng, Rng};
-use std::{collections::HashMap, fs, fs::File, hash::Hash, io::Read};
+use std::{collections::HashMap, fs::File, hash::Hash, io::Read};
 
 struct BiGram<'a> {
     first: &'a str,
@@ -20,33 +20,9 @@ impl<'a> Hash for BiGram<'a> {
     }
 }
 
-#[derive(Debug)]
 struct NextWordOption {
     next: String,
     probability: f64,
-}
-
-impl PartialEq for NextWordOption {
-    fn eq(&self, other: &Self) -> bool {
-        return self.next == other.next && self.probability == other.probability;
-    }
-}
-impl Eq for NextWordOption {}
-impl PartialOrd for NextWordOption {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        if self.probability > other.probability {
-            return Some(std::cmp::Ordering::Less);
-        } else if self.probability < other.probability {
-            return Some(std::cmp::Ordering::Greater);
-        } else {
-            return Some(std::cmp::Ordering::Equal);
-        }
-    }
-}
-impl Ord for NextWordOption {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        return self.partial_cmp(other).unwrap();
-    }
 }
 
 struct BiGramOptions {
@@ -99,11 +75,11 @@ fn read_files_into_string(paths: &[String]) -> String {
 }
 
 fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
-    let bigrams = freqs_and_occurrences.freqs;
+    let freqs = freqs_and_occurrences.freqs;
     let occurences = freqs_and_occurrences.occurences;
 
     let mut res_map = HashMap::<String, BiGramOptions>::new();
-    for (key, value) in bigrams {
+    for (key, value) in freqs {
         let occurence_count = occurences.get(key.first).unwrap();
         let probability = value as f64 / *occurence_count as f64;
 
@@ -114,7 +90,6 @@ fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
         match res_map.get_mut(key.first) {
             Some(val) => {
                 val.opts.push(option);
-                val.opts.sort(); // TODO: is this necessary
                 val.sum += probability;
             }
             None => {
@@ -133,13 +108,7 @@ fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
 }
 
 impl BiGramModel {
-    pub fn new(path: &str) -> BiGramModel {
-        let contents = fs::read_to_string(path).unwrap();
-        let freqs_and_occurences = get_bigrams_freqs(contents.as_str());
-        return create_bi_gram(freqs_and_occurences);
-    }
-
-    pub fn new_multiple(paths: &[String]) -> BiGramModel {
+    pub fn new(paths: &[String]) -> BiGramModel {
         let contents = read_files_into_string(paths);
         let freqs_and_occurrences = get_bigrams_freqs(contents.as_str());
         return create_bi_gram(freqs_and_occurrences);

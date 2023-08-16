@@ -34,7 +34,7 @@ fn main() {
         println!("Expected file as argument");
         return;
     }
-    let mut model = BiGramModel::new_multiple(&args[1..args.len()]);
+    let mut model = BiGramModel::new(&args[1..args.len()]);
 
     let mut input = String::new();
     loop {

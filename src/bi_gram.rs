@@ -56,7 +56,6 @@ struct BiGramOptions {
 
 pub struct BiGramModel {
     data: HashMap<String, BiGramOptions>,
-    rng: ThreadRng,
 }
 
 struct FreqsAndOccurences<'a> {
@@ -130,10 +129,7 @@ fn create_bi_gram(freqs_and_occurrences: FreqsAndOccurences) -> BiGramModel {
         }
     }
 
-    return BiGramModel {
-        data: res_map,
-        rng: rand::thread_rng(),
-    };
+    return BiGramModel { data: res_map };
 }
 
 impl BiGramModel {
@@ -149,9 +145,9 @@ impl BiGramModel {
         return create_bi_gram(freqs_and_occurrences);
     }
 
-    pub fn get_next(&mut self, first: &str) -> Option<&str> {
+    pub fn get_next(&mut self, first: &str, rng: &mut ThreadRng) -> Option<&str> {
         let val = self.data.get(first)?;
-        let num: f64 = self.rng.gen_range(0.0..val.sum);
+        let num: f64 = rng.gen_range(0.0..val.sum);
 
         let mut it = val.opts.iter();
         let mut item = it.next().unwrap();

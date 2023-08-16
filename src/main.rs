@@ -1,5 +1,6 @@
 mod bi_gram;
 
+use rand::rngs::ThreadRng;
 use std::{
     env,
     io::{stdin, stdout, Write},
@@ -7,13 +8,24 @@ use std::{
 
 use bi_gram::BiGramModel;
 
-fn generate_n_words(model: &mut BiGramModel, prompt: &str, n: u32) {
+fn generate_n_words(model: &mut BiGramModel, mut rng: &mut ThreadRng, prompt: &str, n: u32) {
     let mut curr = String::from(prompt);
     for _ in 0..n {
         print!("{} ", curr);
-        curr = String::from(model.get_next(curr.as_str()).unwrap());
+        curr = String::from(model.get_next(curr.as_str(), &mut rng).unwrap());
     }
     println!("");
+}
+
+fn get_next(model: &mut BiGramModel, mut rng: &mut ThreadRng, prompt: &str) {
+    match model.get_next(prompt, &mut rng) {
+        Some(next) => {
+            println!("Next Word: {}", next);
+        }
+        None => {
+            println!("Sorry, I don't know that word");
+        }
+    }
 }
 
 fn main() {
@@ -38,17 +50,8 @@ fn main() {
             input.pop();
         }
 
-        generate_n_words(&mut model, input.as_str(), 5);
-        /*
-        match model.get_next(input.as_str()) {
-            Some(next) => {
-                println!("Next Word: {}", next);
-            }
-            None => {
-                println!("Sorry, I don't know that word");
-            }
-        }
-        */
+        let mut rng = rand::thread_rng();
+        generate_n_words(&mut model, &mut rng, input.as_str(), 5);
         input.clear();
     }
 }

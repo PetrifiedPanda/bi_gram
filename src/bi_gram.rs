@@ -1,4 +1,5 @@
 use rand::{rngs::ThreadRng, Rng};
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::hash::Hash;
@@ -42,6 +43,57 @@ struct FreqsAndOccurences<'a> {
     occurences: HashMap<&'a str, u32>,
 }
 
+fn is_punctuation(c: char) -> bool {
+    match c {
+        '!' | '.' | ',' | ';' | ':' | '-' | '"' | '\'' | '(' | ')' | '[' | ']' | '/' => true,
+        _ => false,
+    }
+}
+
+fn get_punctuation_str(c: char) -> &'static str {
+    assert!(is_punctuation(c));
+    match c {
+        '!' => "!",
+        '.' => ".",
+        ',' => ",",
+        ';' => ";",
+        ':' => ":",
+        '-' => "-",
+        '"' => "\"",
+        '\'' => "'",
+        '(' => "(",
+        ')' => ")",
+        '[' => "[",
+        ']' => "]",
+        '/' => "/",
+        _ => unreachable!(),
+    }
+}
+
+fn process_bi_gram<'a>(
+    prev: &mut &'a str,
+    curr: &'a str,
+    freqs: &mut HashMap<BiGram<'a>, u32>,
+    occurences: &mut HashMap<&'a str, u32>,
+) {
+    let bigram = BiGram {
+        first: prev,
+        second: curr,
+    };
+    freqs
+        .entry(bigram)
+        .and_modify(|count| *count += 1)
+        .or_insert(1);
+
+    match occurences.get_mut(prev) {
+        Some(count) => *count += 1,
+        None => {
+            occurences.insert(prev, 1);
+        }
+    }
+    *prev = curr;
+}
+
 fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
     let mut freqs = HashMap::<BiGram, u32>::new();
     let mut occurences = HashMap::<&str, u32>::new();
@@ -57,22 +109,23 @@ fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
         }
     }
     for item in it {
-        let bigram = BiGram {
-            first: prev,
-            second: item,
+        let delim = Cell::new('\0');
+        let pred = |c: char| {
+            if is_punctuation(c) {
+                delim.set(c);
+                return true;
+            } else {
+                return false;
+            }
         };
-        freqs
-            .entry(bigram)
-            .and_modify(|count| *count += 1)
-            .or_insert(1);
-
-        match occurences.get_mut(prev) {
-            Some(count) => *count += 1,
-            None => {
-                occurences.insert(prev, 1);
+        for inner_item in item.split(pred).filter(|s| !s.is_empty()) {
+            process_bi_gram(&mut prev, inner_item, &mut freqs, &mut occurences);
+            if delim.get() != '\0' {
+                let punct_str = get_punctuation_str(delim.get());
+                process_bi_gram(&mut prev, punct_str, &mut freqs, &mut occurences);
+                delim.set('\0');
             }
         }
-        prev = item;
     }
     return FreqsAndOccurences { freqs, occurences };
 }

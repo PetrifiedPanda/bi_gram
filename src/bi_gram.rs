@@ -45,7 +45,7 @@ struct FreqsAndOccurences<'a> {
 fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
     let mut freqs = HashMap::<BiGram, u32>::new();
     let mut occurences = HashMap::<&str, u32>::new();
-    let mut it = contents.split(char::is_whitespace);
+    let mut it = contents.split_whitespace();
     let opt = it.next();
     let mut prev;
     match opt {
@@ -56,13 +56,7 @@ fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
             return FreqsAndOccurences { freqs, occurences };
         }
     }
-    while prev.is_empty() {
-        prev = it.next().unwrap();
-    }
     for item in it {
-        if item.is_empty() {
-            continue;
-        }
         let bigram = BiGram {
             first: prev,
             second: item,

@@ -7,13 +7,20 @@ use std::time::Instant;
 
 use bi_gram::BiGramModel;
 
-fn generate_n_words(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str, n: u32) {
+fn is_punctuation(c: char) -> bool {
+    match c {
+        '.' | '!' | '?' => true,
+        _ => false,
+    }
+}
+
+fn generate_sentence(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str) {
     let mut curr = prompt;
-    for _ in 0..n {
+    while !curr.ends_with(is_punctuation) {
         print!("{} ", curr);
         curr = model.get_next(curr, &mut *rng).unwrap();
     }
-    println!("");
+    println!("{}", curr);
 }
 
 fn get_next(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str) {
@@ -55,7 +62,7 @@ fn main() {
 
         let mut rng = rand::thread_rng();
         let start = Instant::now();
-        generate_n_words(&model, &mut rng, input.as_str(), 8);
+        generate_sentence(&model, &mut rng, input.as_str());
         let elapsed = start.elapsed();
         println!("Generating response took {:?}", elapsed);
         input.clear();

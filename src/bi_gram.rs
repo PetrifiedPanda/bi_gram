@@ -56,7 +56,13 @@ fn get_bi_gram_freqs(contents: &str) -> FreqsAndOccurences {
             return FreqsAndOccurences { freqs, occurences };
         }
     }
+    while prev.is_empty() {
+        prev = it.next().unwrap();
+    }
     for item in it {
+        if item.is_empty() {
+            continue;
+        }
         let bigram = BiGram {
             first: prev,
             second: item,

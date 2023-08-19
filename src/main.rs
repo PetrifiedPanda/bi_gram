@@ -17,8 +17,16 @@ fn is_punctuation(c: char) -> bool {
 fn generate_sentence(model: &BiGramModel, rng: &mut ThreadRng, prompt: &str) {
     let mut curr = prompt;
     while !curr.ends_with(is_punctuation) {
-        print!("{} ", curr);
-        curr = model.get_next(curr, &mut *rng).unwrap();
+        match model.get_next(curr, &mut *rng) {
+            Some(next) => {
+                print!("{} ", curr);
+                curr = next;
+            }
+            None => {
+                println!("I don't know the word {}", curr);
+                return;
+            }
+        }
     }
     println!("{}", curr);
 }
